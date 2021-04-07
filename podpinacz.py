@@ -346,17 +346,17 @@ class Podpinacz:
 
             joinObject.setUsingMemoryCache(True)
             joinObject.setJoinLayer(table)
-            joinObject.setUpsertOnEdit(True)
-            joinObject.setDynamicFormEnabled(True)
+            joinObject.setUpsertOnEdit(False)
+            joinObject.setDynamicFormEnabled(False)
             lyr_out.addJoin(joinObject)
 
             if self.dlg.ptaki.isChecked():
-                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_ptaki.qml')"
+                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_ptaki.qml')
             elif self.dlg.siedliska.isChecked():
                 lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_siedliska.qml')
             else:
                 lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_reszta.qml')
-            
+
             lyr_out.setName('warstwa_podpieta')
 
 
