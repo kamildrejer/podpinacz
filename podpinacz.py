@@ -43,6 +43,7 @@ from qgis.core import QgsLayerTreeLayer
 from qgis.core import QgsVectorLayer, QgsDataSourceUri
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsCoordinateTransformContext
 from qgis.core import QgsVectorFileWriter
+from qgis.core import Qgis
 from qgis.utils import iface
 from PyQt5.QtCore import QVariant
 import processing
@@ -187,7 +188,7 @@ class Podpinacz:
         icon_path = ':/plugins/podpinacz/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u''),
+            text=self.tr(u'Podpinacz'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -218,6 +219,13 @@ class Podpinacz:
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
+
+
+        # self.dlg.output_path.setFilePath(QgsProject.instance().absolutePath())
+        # self.dlg.output_path.setFilter(QgsVectorFileWriter.fileFilterString())
+
+
+
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
@@ -227,12 +235,24 @@ class Podpinacz:
                 grupy_string = "grupa = 'Gatunki ptaków'"
             elif self.dlg.siedliska.isChecked():
                 grupy_string = "grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych'"
-            else:
+            elif self.dlg.reszta.isChecked():
                 grupy_string = "grupa != 'Gatunki ptaków' and not (grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych')"
+            else:
+                iface.messageBar().pushMessage("Error", "Proszę zaznaczyć grupę", level=Qgis.Critical)
+                return
+
 
             lyr_out0 = iface.activeLayer()
             if lyr_out0.isValid():
                 print("warstwa OK")
+
+                crs = lyr_out0.crs()
+                crs.createFromId(2180)
+                lyr_out0.setCrs(crs)
+
+                if lyr_out0.wkbType()==100:
+                    iface.messageBar().pushMessage("Error", "Proszę zaznaczyć warstwę posiadającą geometrię", level=Qgis.Critical)
+                    return
 
             tempfile = self.dlg.output_path.filePath() #"C:\\Users\\k.drejer\\Downloads\\outShapefile6.gpkg"
 
@@ -322,7 +342,7 @@ class Podpinacz:
             	field = QgsField( 'obserwator', QVariant.String )
             	lyr_out.addAttribute( field )
 
-            if 'liczba' not in field_names:
+            if 'liczebnosc' not in field_names:
             	field = QgsField( 'liczba', QVariant.String )
             	lyr_out.addAttribute( field )
 
@@ -333,6 +353,21 @@ class Podpinacz:
             if 'uwagi' not in field_names:
             	field = QgsField( 'uwagi', QVariant.String )
             	lyr_out.addAttribute( field )
+
+            if 'X_92' not in field_names:
+            	field = QgsField( 'X_92', QVariant.Double )
+            	lyr_out.addAttribute( field )
+
+            if 'Y_92' not in field_names:
+            	field = QgsField( 'Y_92', QVariant.Double )
+            	lyr_out.addAttribute( field )
+
+
+            for feature in lyr_out.getFeatures():
+                fields = lyr_out.fields() # accessing layer fields
+                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("X_92"), feature.geometry().centroid().asPoint()[0])
+                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("Y_92"), feature.geometry().centroid().asPoint()[1])
+                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("obserwator"), self.dlg.autor.text())
 
             lyr_out.commitChanges()
 
@@ -376,3 +411,5 @@ class Podpinacz:
 
             QgsProject.instance().addMapLayer(lyr_out, False)
             root.addLayer(lyr_out)
+
+            iface.messageBar().pushMessage("Sukces!", "Warstwa "+ iface.activeLayer().name() +"została podłączona", level=Qgis.Success)

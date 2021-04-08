@@ -1,5 +1,5 @@
 <plugins>
-  <pyqgis_plugin name="Uzupełnianki_v_github" version="wersja 0.5">
+  <pyqgis_plugin name="Uzupełnianki" version="wersja 0.9">
     <qgis_minimum_version>3.0.0</qgis_minimum_version>
     <download_url>https://github.com/kamildrejer/podpinacz/blob/main/download/podpinacz.zip?raw=true</download_url>
   </pyqgis_plugin>
