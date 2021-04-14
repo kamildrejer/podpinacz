@@ -214,9 +214,29 @@ class Podpinacz:
             self.first_start = False
             self.dlg = PodpinaczDialog()
 
+        self.dlg.dodajPola.clear()
+        self.dlg.dodajPola.addItem('status_ochr')
+        self.dlg.dodajPola.addItem('uza_st_och')
+        self.dlg.dodajPola.addItem('zdj_fit')
+        self.dlg.dodajPola.addItem('st_rozw')
+        self.dlg.dodajPola.addItem('rodz_obs')
+        self.dlg.dodajPola.addItem('funk_siedl')
+        self.dlg.dodajPola.addItem('gniazd')
+        self.dlg.dodajPola.addItem('pop')
+
+        self.dlg.liczebnosc.clear()
+        self.dlg.liczebnosc.addItem('liczba')
+        self.dlg.liczebnosc.addItem('licz_min + licz_max')
+        self.dlg.liczebnosc.setCurrentRow(0)
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
+
+
+
+
+
         result = self.dlg.exec_()
         # See if OK was pressed
 
@@ -229,6 +249,10 @@ class Podpinacz:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
+            print(self.dlg.output_path.filePath())
+            if len(self.dlg.output_path.filePath())<4:
+                iface.messageBar().pushMessage("Error", "Proszę wybrać plik do zapisu", level=Qgis.Critical)
+                return
 
             grupy_string = ""
             if self.dlg.ptaki.isChecked():
@@ -241,11 +265,15 @@ class Podpinacz:
                 iface.messageBar().pushMessage("Error", "Proszę zaznaczyć grupę", level=Qgis.Critical)
                 return
 
+            tempfile = self.dlg.output_path.filePath()
+
+            for layer in self.iface.mapCanvas().layers():
+                if tempfile == layer.dataProvider().dataSourceUri():
+                    iface.messageBar().pushMessage("Error", "Wybrano warstwę wczytaną do projektu. Proszę wybrać inną.", level=Qgis.Critical)
+                    return
 
             lyr_out0 = iface.activeLayer()
             if lyr_out0.isValid():
-                print("warstwa OK")
-
                 crs = lyr_out0.crs()
                 crs.createFromId(2180)
                 lyr_out0.setCrs(crs)
@@ -253,8 +281,11 @@ class Podpinacz:
                 if lyr_out0.wkbType()==100:
                     iface.messageBar().pushMessage("Error", "Proszę zaznaczyć warstwę posiadającą geometrię", level=Qgis.Critical)
                     return
+            else:
+                iface.messageBar().pushMessage("Error", "Proszę zaznaczyć warstwę do podpięcia", level=Qgis.Critical)
+                return
 
-            tempfile = self.dlg.output_path.filePath() #"C:\\Users\\k.drejer\\Downloads\\outShapefile6.gpkg"
+             #"C:\\Users\\k.drejer\\Downloads\\outShapefile6.gpkg"
 
             options = QgsVectorFileWriter.SaveVectorOptions()
             options.driverName = "ESRI Shapefile"
@@ -272,10 +303,10 @@ class Podpinacz:
             else:
                 sciezka_wczytaj = tempfile
             lyr_out = QgsVectorLayer(sciezka_wczytaj, "wczytana", "ogr" )
-            if lyr_out.isValid():
-                print("warstwa 2 OK")
-            else:
-                print("sraKA")
+
+            if not lyr_out.isValid():
+                iface.messageBar().pushMessage("Error", "Problem z plikiem wyjściowym, proszę wybrać inny", level=Qgis.Critical)
+                return
 
             tablename_slowniki = "Slowniki"
             tablename_keys = "Slowniki_keys"
@@ -299,7 +330,7 @@ class Podpinacz:
             uri.setConnection("54.38.243.14", "5432", "postgis", "devel", r'ohtah"mae4Xo')
 
 
-            if len(QgsProject.instance().mapLayersByName(tablename_slowniki)) == 0:
+            if len(QgsProject.instance().mapLayersByName(tablename_slowniki_filter)) == 0:
             	uri.setDataSource ("Slowniki", tablename_slowniki, "", grupy_string)
             	#uri.setDataSource ("Slowniki", tablename_slowniki,'','','hendle')
             	table=QgsVectorLayer (uri.uri().replace(' ()',''), tablename_slowniki, "postgres")
@@ -307,18 +338,18 @@ class Podpinacz:
             		print("Layer %s did not load" %table.name())
             	QgsProject.instance().addMapLayer(table)
             else:
-            	table=QgsProject.instance().mapLayersByName(tablename_slowniki)[0]
+            	table=QgsProject.instance().mapLayersByName(tablename_slowniki_filter)[0]
             	QgsProject.instance().addMapLayer(table)
             table.setName(tablename_slowniki_filter)
 
-            if len(QgsProject.instance().mapLayersByName(tablename_keys)) == 0:
+            if len(QgsProject.instance().mapLayersByName(tablename_keys_filter)) == 0:
             	uri.setDataSource ("Slowniki", tablename_keys,"", grupy_string)
             	gatunki=QgsVectorLayer (uri.uri().replace(' ()',''), tablename_keys, "postgres")
             	if not table.isValid():
             		print("Layer %s did not load" %gatunki.name())
             	QgsProject.instance().addMapLayer(gatunki)
             else:
-            	gatunki=QgsProject.instance().mapLayersByName(tablename_keys)[0]
+            	gatunki=QgsProject.instance().mapLayersByName(tablename_keys_filter)[0]
             	QgsProject.instance().addMapLayer(gatunki)
             gatunki.setName(tablename_keys_filter)
 
@@ -338,20 +369,33 @@ class Podpinacz:
             	field = QgsField( 'data', QVariant.Date )
             	lyr_out.addAttribute( field )
 
-            if 'obserwator' not in field_names:
-            	field = QgsField( 'obserwator', QVariant.String )
+            if 'im_naz' not in field_names:
+            	field = QgsField( 'im_naz', QVariant.String )
             	lyr_out.addAttribute( field )
 
-            if 'liczebnosc' not in field_names:
-            	field = QgsField( 'liczba', QVariant.String )
-            	lyr_out.addAttribute( field )
+            if self.dlg.liczebnosc.currentItem().text() == "liczba":
+                if 'liczba' not in field_names:
+                	field = QgsField( 'liczba', QVariant.String )
+                	lyr_out.addAttribute( field )
+            else:
+                if 'licz_min' not in field_names:
+                	field = QgsField( 'licz_min', QVariant.String )
+                	lyr_out.addAttribute( field )
+                if 'licz_max' not in field_names:
+                	field = QgsField( 'licz_max', QVariant.String )
+                	lyr_out.addAttribute( field )
 
             if 'jednostki' not in field_names:
             	field = QgsField( 'jednostki', QVariant.String )
             	lyr_out.addAttribute( field )
 
-            if 'uwagi' not in field_names:
-            	field = QgsField( 'uwagi', QVariant.String )
+            for item in self.dlg.dodajPola.selectedItems():
+                if item.text() not in field_names:
+                	field = QgsField( item.text(), QVariant.String )
+                	lyr_out.addAttribute( field )
+
+            if 'uwagi_ost' not in field_names:
+            	field = QgsField( 'uwagi_ost', QVariant.String )
             	lyr_out.addAttribute( field )
 
             if 'X_92' not in field_names:
@@ -363,11 +407,15 @@ class Podpinacz:
             	lyr_out.addAttribute( field )
 
 
+
+
+
             for feature in lyr_out.getFeatures():
                 fields = lyr_out.fields() # accessing layer fields
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("X_92"), feature.geometry().centroid().asPoint()[0])
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("Y_92"), feature.geometry().centroid().asPoint()[1])
-                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("obserwator"), self.dlg.autor.text())
+                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("im_naz"), self.dlg.autor.text())
+                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("data"), self.dlg.data_obs.date())
 
             lyr_out.commitChanges()
 
@@ -383,14 +431,10 @@ class Podpinacz:
             joinObject.setJoinLayer(table)
             joinObject.setUpsertOnEdit(False)
             joinObject.setDynamicFormEnabled(False)
+            joinObject.setPrefix('Slowniki_')
             lyr_out.addJoin(joinObject)
 
-            if self.dlg.ptaki.isChecked():
-                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_ptaki.qml')
-            elif self.dlg.siedliska.isChecked():
-                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_siedliska.qml')
-            else:
-                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_reszta.qml')
+            lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz.qml')
 
             lyr_out.setName('warstwa_podpieta')
 
