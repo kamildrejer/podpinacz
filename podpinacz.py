@@ -44,6 +44,17 @@ from qgis.core import QgsVectorLayer, QgsDataSourceUri
 from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsCoordinateTransformContext
 from qgis.core import QgsVectorFileWriter
 from qgis.core import Qgis
+from qgis.core import (
+  QgsGeometry,
+  QgsPoint,
+  QgsPointXY,
+  QgsWkbTypes,
+  QgsProject,
+  QgsFeatureRequest,
+  QgsVectorLayer,
+  QgsDistanceArea,
+  QgsUnitTypes,
+)
 from qgis.utils import iface
 from PyQt5.QtCore import QVariant
 import processing
@@ -215,7 +226,7 @@ class Podpinacz:
             self.dlg = PodpinaczDialog()
 
         self.dlg.dodajPola.clear()
-        self.dlg.dodajPola.addItem('status_ochr')
+        # self.dlg.dodajPola.addItem('status_ochr')
         self.dlg.dodajPola.addItem('uza_st_och')
         self.dlg.dodajPola.addItem('zdj_fit')
         self.dlg.dodajPola.addItem('st_rozw')
@@ -273,10 +284,9 @@ class Podpinacz:
                     return
 
             lyr_out0 = iface.activeLayer()
+            crs = QgsCoordinateReferenceSystem("EPSG:2180")
             if lyr_out0.isValid():
-                crs = lyr_out0.crs()
-                crs.createFromId(2180)
-                lyr_out0.setCrs(crs)
+                # lyr_out0.setCrs(crs)
 
                 if lyr_out0.wkbType()==100:
                     iface.messageBar().pushMessage("Error", "Proszę zaznaczyć warstwę posiadającą geometrię", level=Qgis.Critical)
@@ -290,6 +300,8 @@ class Podpinacz:
             options = QgsVectorFileWriter.SaveVectorOptions()
             options.driverName = "ESRI Shapefile"
             options.fileEncoding = "UTF8"
+            options.ct = transform = QgsCoordinateTransform(lyr_out0.crs(),
+                                   QgsCoordinateReferenceSystem("EPSG:2180"), QgsProject.instance())
 
             # Save memory layer to file
             QgsVectorFileWriter.deleteShapeFile(tempfile)
@@ -307,6 +319,7 @@ class Podpinacz:
             if not lyr_out.isValid():
                 iface.messageBar().pushMessage("Error", "Problem z plikiem wyjściowym, proszę wybrać inny", level=Qgis.Critical)
                 return
+            # lyr_out.setCrs(crs)
 
             tablename_slowniki = "Slowniki"
             tablename_keys = "Slowniki_keys"
@@ -385,8 +398,8 @@ class Podpinacz:
                 	field = QgsField( 'licz_max', QVariant.String )
                 	lyr_out.addAttribute( field )
 
-            if 'jednostki' not in field_names:
-            	field = QgsField( 'jednostki', QVariant.String )
+            if 'jdn_lcz' not in field_names:
+            	field = QgsField( 'jdn_lcz', QVariant.String )
             	lyr_out.addAttribute( field )
 
             for item in self.dlg.dodajPola.selectedItems():
@@ -397,6 +410,11 @@ class Podpinacz:
             if 'uwagi_ost' not in field_names:
             	field = QgsField( 'uwagi_ost', QVariant.String )
             	lyr_out.addAttribute( field )
+
+            if lyr_out.wkbType()==QgsWkbTypes.Polygon or lyr_out.wkbType()==QgsWkbTypes.MultiPolygon:
+                if 'pow' not in field_names:
+                	field = QgsField( 'pow', QVariant.Double )
+                	lyr_out.addAttribute( field )
 
             if 'X_92' not in field_names:
             	field = QgsField( 'X_92', QVariant.Double )
@@ -414,6 +432,7 @@ class Podpinacz:
                 fields = lyr_out.fields() # accessing layer fields
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("X_92"), feature.geometry().centroid().asPoint()[0])
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("Y_92"), feature.geometry().centroid().asPoint()[1])
+                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("pow"), round(feature.geometry().area(),3))
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("im_naz"), self.dlg.autor.text())
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("data"), self.dlg.data_obs.date())
 
@@ -434,7 +453,12 @@ class Podpinacz:
             joinObject.setPrefix('Slowniki_')
             lyr_out.addJoin(joinObject)
 
-            lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz.qml')
+            if self.dlg.ptaki.isChecked():
+                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_ptaki.qml')
+            elif self.dlg.siedliska.isChecked():
+                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_siedliska.qml')
+            else:
+                lyr_out.loadNamedStyle('G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\style_formularz_reszta.qml')
 
             lyr_out.setName('warstwa_podpieta')
 
@@ -456,4 +480,4 @@ class Podpinacz:
             QgsProject.instance().addMapLayer(lyr_out, False)
             root.addLayer(lyr_out)
 
-            iface.messageBar().pushMessage("Sukces!", "Warstwa "+ iface.activeLayer().name() +"została podłączona", level=Qgis.Success)
+            iface.messageBar().pushMessage("Sukces! ", "Warstwa "+ iface.activeLayer().name() +"została podłączona", level=Qgis.Success)
