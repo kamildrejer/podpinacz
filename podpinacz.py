@@ -227,7 +227,8 @@ class Podpinacz:
 
         self.dlg.dodajPola.clear()
         # self.dlg.dodajPola.addItem('status_ochr')
-        self.dlg.dodajPola.addItem('uza_st_och')
+        self.dlg.dodajPola.addItem('st_zach')
+        self.dlg.dodajPola.addItem('uza_oceny')
         self.dlg.dodajPola.addItem('zdj_fit')
         self.dlg.dodajPola.addItem('st_rozw')
         self.dlg.dodajPola.addItem('rodz_obs')
@@ -269,9 +270,9 @@ class Podpinacz:
             if self.dlg.ptaki.isChecked():
                 grupy_string = "grupa = 'Gatunki ptaków'"
             elif self.dlg.siedliska.isChecked():
-                grupy_string = "grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych'"
+                grupy_string = "grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych' or grupa = 'siedliska'"
             elif self.dlg.reszta.isChecked():
-                grupy_string = "grupa != 'Gatunki ptaków' and not (grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych')"
+                grupy_string = "grupa != 'Gatunki ptaków' and not (grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych' or grupa = 'siedliska')"
             else:
                 iface.messageBar().pushMessage("Error", "Proszę zaznaczyć grupę", level=Qgis.Critical)
                 return
@@ -435,7 +436,9 @@ class Podpinacz:
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("pow"), round(feature.geometry().area(),3))
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("im_naz"), self.dlg.autor.text())
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("data"), self.dlg.data_obs.date())
-
+                if self.dlg.siedliska.isChecked():
+                    lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("rodz_obs"), '1')
+                    lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("pop"), 'p')
             lyr_out.commitChanges()
 
             tableField = 'handle'
