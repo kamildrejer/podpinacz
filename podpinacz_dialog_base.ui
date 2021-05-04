@@ -112,7 +112,7 @@
       <x>10</x>
       <y>10</y>
       <width>341</width>
-      <height>111</height>
+      <height>129</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="data">
@@ -130,11 +130,31 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Data obserwacji</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QCheckBox" name="czy_data_obs">
+         <property name="text">
+          <string>Data obserwacji</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QDateEdit" name="data_obs">
@@ -156,21 +176,34 @@
        <property name="calendarPopup">
         <bool>true</bool>
        </property>
-       <property name="date">
-        <date>
-         <year>2021</year>
-         <month>4</month>
-         <day>1</day>
-        </date>
-       </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Autor obserwacji</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QCheckBox" name="czy_autor">
+         <property name="text">
+          <string>Autor obserwacji</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QLineEdit" name="autor"/>

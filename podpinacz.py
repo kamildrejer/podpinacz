@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from PyQt5 import QtCore, QtGui, QtWidgets #works for pyqt5
-from qgis.gui import QgsFileWidget
+from qgis.gui import QgsFileWidget, QgsDateTimeEdit
 # from qgis.core import QgsProcessing
 # from qgis.core import QgsProcessingAlgorithm
 # from qgis.core import QgsProcessingMultiStepFeedback
@@ -328,13 +328,17 @@ class Podpinacz:
             if self.dlg.ptaki.isChecked():
                 tablename_slowniki_filter = "Slowniki_ptaki"
                 tablename_keys_filter = "Slowniki_keys_ptaki"
+                path = "G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\Slowniki_keys_ptaki.gpkg"
 
             elif self.dlg.siedliska.isChecked():
                 tablename_slowniki_filter = "Slowniki_siedliska"
                 tablename_keys_filter = "Slowniki_keys_siedliska"
+                path = "G:\\Dyski współdzielone\\1_Public\QGiS\\Slowniki_inwentarki\\Slowniki_keys_siedliska.gpkg"
+
             else:
                 tablename_slowniki_filter = "Slowniki_reszta"
                 tablename_keys_filter = "Slowniki_keys_reszta"
+                path = "G:\\Dyski współdzielone\\1_Public\\QGiS\\Slowniki_inwentarki\\Slowniki_keys_reszta.gpkg"
 
             #tablename_slowniki = '"Slowniki"."Slowniki" where layer like "Gatunki gadów (exp)"'
 
@@ -357,11 +361,12 @@ class Podpinacz:
             table.setName(tablename_slowniki_filter)
 
             if len(QgsProject.instance().mapLayersByName(tablename_keys_filter)) == 0:
-            	uri.setDataSource ("Slowniki", tablename_keys,"", grupy_string)
-            	gatunki=QgsVectorLayer (uri.uri().replace(' ()',''), tablename_keys, "postgres")
-            	if not table.isValid():
-            		print("Layer %s did not load" %gatunki.name())
-            	QgsProject.instance().addMapLayer(gatunki)
+                uri.setDataSource ("Slowniki", tablename_keys,"", grupy_string)
+                gatunki=QgsVectorLayer (uri.uri().replace(' ()',''), tablename_keys, "postgres")
+                #gatunki= QgsVectorLayer(path, tablename_keys_filter , 'ogr')
+                # if not gatunki.isValid():
+                #     print("Layer %s did not load" %gatunki.name())
+                QgsProject.instance().addMapLayer(gatunki)
             else:
             	gatunki=QgsProject.instance().mapLayersByName(tablename_keys_filter)[0]
             	QgsProject.instance().addMapLayer(gatunki)
@@ -434,8 +439,10 @@ class Podpinacz:
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("X_92"), feature.geometry().centroid().asPoint()[0])
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("Y_92"), feature.geometry().centroid().asPoint()[1])
                 lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("pow"), round(feature.geometry().area(),3))
-                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("im_naz"), self.dlg.autor.text())
-                lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("data"), self.dlg.data_obs.date())
+                if self.dlg.czy_autor.isChecked():
+                    lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("im_naz"), self.dlg.autor.text())
+                if self.dlg.czy_data_obs.isChecked():
+                    lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("data"), self.dlg.data_obs.date())
                 if self.dlg.siedliska.isChecked():
                     lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("rodz_obs"), '1')
                     lyr_out.changeAttributeValue(feature.id(),fields.indexFromName("pop"), 'p')
