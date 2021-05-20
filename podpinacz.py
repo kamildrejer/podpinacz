@@ -270,9 +270,9 @@ class Podpinacz:
             if self.dlg.ptaki.isChecked():
                 grupy_string = "grupa = 'Gatunki ptaków'"
             elif self.dlg.siedliska.isChecked():
-                grupy_string = "grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych'"
+                grupy_string = "grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych'"
             elif self.dlg.reszta.isChecked():
-                grupy_string = "grupa != 'Gatunki ptaków' and not (grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Zbiorowiska roślinne' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych')"
+                grupy_string = "grupa != 'Gatunki ptaków' and not (grupa = 'siedliska' or grupa = 'Gatunki wątrobowców' or  grupa = 'Gatunki grzybów' or  grupa = 'Gatunki brunatnic' or grupa = 'Gatunki krasnorostów' or grupa = 'Gatunki mchów' or grupa = 'Gatunki porostów' or grupa = 'Gatunki roślin naczyniowych')"
             else:
                 iface.messageBar().pushMessage("Error", "Proszę zaznaczyć grupę", level=Qgis.Critical)
                 return
