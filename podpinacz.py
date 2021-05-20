@@ -413,6 +413,10 @@ class Podpinacz:
                 	field = QgsField( item.text(), QVariant.String )
                 	lyr_out.addAttribute( field )
 
+            if 'mat_arch' not in field_names:
+            	field = QgsField( 'mat_arch', QVariant.String )
+            	lyr_out.addAttribute( field )
+
             if 'uwagi_ost' not in field_names:
             	field = QgsField( 'uwagi_ost', QVariant.String )
             	lyr_out.addAttribute( field )
